@@ -19,7 +19,7 @@
 # after that is checked by the installer against the key it carries.
 set -eu
 
-REPO="Miroshka000/mikan"
+REPO="timofejmihee1-cpu/memora"
 BASE="https://github.com/$REPO/releases/latest/download"
 INDEX="https://github.com/$REPO/releases/download/updates/index.json"
 

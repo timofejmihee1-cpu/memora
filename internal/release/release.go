@@ -22,7 +22,7 @@ import (
 const PublicKey = "Z3wSIPBSaJxh5CsGO8eINI0aM0kyrQ46EcJSNeH85W8="
 
 // Repo is where releases are published.
-const Repo = "Miroshka000/mikan"
+const Repo = "timofejmihee1-cpu/memora"
 
 // InstallCommand installs mikan from the latest release; run on the server.
 const InstallCommand = "curl -fsSL https://github.com/" + Repo + "/releases/latest/download/install.sh | sudo bash"

@@ -13,11 +13,11 @@ use serde::Deserialize;
 /// The public half of the release signing key, the same as internal/release.PublicKey.
 pub const PUBLIC_KEY: &str = "Z3wSIPBSaJxh5CsGO8eINI0aM0kyrQ46EcJSNeH85W8=";
 
-pub const REPO: &str = "Miroshka000/mikan";
+pub const REPO: &str = "timofejmihee1-cpu/memora";
 
 /// The project's own namespace on GitHub Packages: ghcr.io/<owner of REPO in lowercase>/,
 /// as internal/release checks it.
-const IMAGE_PREFIX: &str = "ghcr.io/miroshka000/";
+const IMAGE_PREFIX: &str = "ghcr.io/timofejmihee1-cpu/";
 
 /// Installs a node of an existing panel on a fresh server (internal/release.JoinCommand).
 pub fn join_command(key: &str) -> String {
