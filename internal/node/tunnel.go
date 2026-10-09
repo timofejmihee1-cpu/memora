@@ -103,6 +103,9 @@ func (t *Tunnel) HandleUDPPacket(p C.UDPPacket, m *C.Metadata) {
 			return
 		}
 	}
+	if lim := s.limiter; lim != nil {
+		lim.wait(len(p.Data()))
+	}
 	s.countIn(b, int64(len(p.Data())), 0)
 	t.inner.HandleUDPPacket(&countingPacket{UDPPacket: p, slot: s, bucket: b}, m)
 }
@@ -138,11 +141,17 @@ func (c *countingConn) Read(b []byte) (int, error) {
 	n, err := c.Conn.Read(b)
 	if n > 0 {
 		c.slot.countIn(c.bucket, int64(n), 0)
+		if lim := c.slot.limiter; lim != nil {
+			lim.wait(n)
+		}
 	}
 	return n, err
 }
 
 func (c *countingConn) Write(b []byte) (int, error) {
+	if lim := c.slot.limiter; lim != nil {
+		lim.wait(len(b))
+	}
 	n, err := c.Conn.Write(b)
 	if n > 0 {
 		c.slot.countIn(c.bucket, 0, int64(n))
@@ -170,6 +179,9 @@ type countingPacket struct {
 }
 
 func (p *countingPacket) WriteBack(b []byte, addr net.Addr) (int, error) {
+	if lim := p.slot.limiter; lim != nil {
+		lim.wait(len(b))
+	}
 	n, err := p.UDPPacket.WriteBack(b, addr)
 	if n > 0 {
 		p.slot.countIn(p.bucket, 0, int64(n))

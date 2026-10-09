@@ -435,6 +435,11 @@ func (s *Syncer) policiesFrom(snap *snapshot) (epoch string, out []nodeapi.Polic
 		for _, name := range names {
 			p := userPolicy(u, grants.Main(u.ID), name, seq, now, here, shut[u.ID], others[name])
 			p.Pools = pools[u.ID]
+			if u.TariffID.Valid {
+				if tr, ok := snap.tariffs[u.TariffID.Int64]; ok && tr.SpeedLimit.Valid && tr.SpeedLimit.Int64 > 0 {
+					p.SpeedLimit = tr.SpeedLimit.Int64
+				}
+			}
 			p.TorrentExempt = snap.torrent.IsExempt(u.ID)
 			if !p.TorrentExempt {
 				// A user added to the exemptions after a catch is let in at once.
@@ -764,7 +769,7 @@ func policyKey(ps []nodeapi.Policy) string {
 	h := sha256.New()
 	for _, p := range ps {
 		raw, _ := json.Marshal([]any{p.Slot, p.Allowed, p.Inbounds, p.DeviceLimit, p.QuotaRemaining < 0, p.OtherIPs, poolKey(p.Pools),
-			p.TorrentExempt, p.BannedUntil})
+			p.TorrentExempt, p.BannedUntil, p.SpeedLimit})
 		h.Write(raw)
 	}
 	return hex.EncodeToString(h.Sum(nil))

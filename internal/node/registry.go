@@ -60,6 +60,7 @@ type slot struct {
 	cleaned     time.Time             // when ips was last swept of devices that left
 	seenPruned  time.Time             // likewise for seen
 	pools       map[string]*bucket    // traffic pools of the slot, made on first use
+	limiter     *tokenBucket          // bandwidth rate limiter; nil if unlimited
 }
 
 type ipUse struct {
@@ -192,6 +193,15 @@ func (r *Registry) SetPolicies(epoch string, list []nodeapi.Policy) {
 			b.exhausted.Store(false)
 		}
 		if ok {
+			if p.SpeedLimit > 0 {
+				if s.limiter == nil {
+					s.limiter = newTokenBucket(p.SpeedLimit)
+				} else {
+					s.limiter.update(p.SpeedLimit)
+				}
+			} else if s.limiter != nil {
+				s.limiter.update(0)
+			}
 			for _, pq := range p.Pools {
 				if pq.Remaining < 0 {
 					continue

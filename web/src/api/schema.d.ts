@@ -3820,6 +3820,11 @@ export interface components {
             reset_strategy: "none" | "month_start" | "period";
             /** Format: int64 */
             sort?: number;
+            /**
+             * Format: int64
+             * @description Лимит скорости в байтах/сек; null или опущен — без лимита
+             */
+            speed_limit?: number | null;
             /** @description Все сроки по порядку, когда тариф продаётся на несколько; тогда duration_days, price_stars и price_rub берутся из первого. Не передан — первый срок из duration_days, price_stars и price_rub, остальные без изменений */
             terms?: components["schemas"]["TermBody"][];
             /** Format: int64 */
@@ -3860,6 +3865,11 @@ export interface components {
             reset_strategy: "none" | "month_start" | "period";
             /** Format: int64 */
             sort: number;
+            /**
+             * Format: int64
+             * @description Лимит скорости в байтах/сек; null — без лимита
+             */
+            speed_limit: number | null;
             /** @description Сроки, на которые продаётся тариф, по порядку; первый — тот же, что duration_days, price_stars и price_rub */
             terms: components["schemas"]["TermView"][];
             /**

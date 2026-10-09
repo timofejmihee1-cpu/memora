@@ -32,6 +32,7 @@ type snapshot struct {
 	torrent  torrent.Config
 	bans     map[int64]int64 // user → when the torrent blocker's ban ends (unix)
 	filters  filters.Config
+	tariffs  map[int64]db.Tariff
 }
 
 type counterPos struct {
@@ -91,6 +92,14 @@ func (m *Manager) readSnapshot(ctx context.Context) (s *snapshot, err error) {
 	}
 	if s.filters, err = filters.Load(ctx, settings.New(q)); err != nil {
 		return nil, err
+	}
+	s.tariffs = map[int64]db.Tariff{}
+	tariffsList, err := q.ListTariffs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range tariffsList {
+		s.tariffs[t.ID] = t
 	}
 	if s.torrent.Enabled {
 		bans, err := q.ActiveTorrentBans(ctx, m.now().Unix())

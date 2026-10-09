@@ -106,6 +106,8 @@ type Policy struct {
 	// BannedUntil (unix seconds) keeps the slot out until then: the torrent blocker
 	// caught it on some node of the panel. 0: no ban.
 	BannedUntil int64 `json:"banned_until,omitempty"`
+	// SpeedLimit is maximum speed in bytes/sec; 0 = unlimited.
+	SpeedLimit int64 `json:"speed_limit,omitempty"`
 }
 
 type PoliciesRequest struct {
