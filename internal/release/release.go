@@ -19,7 +19,7 @@ import (
 // PublicKey is the public half of the release signing key (raw Ed25519, base64). The
 // private half lives only in the RELEASE_SIGNING_KEY secret of the release workflow and
 // with the maintainer.
-const PublicKey = "Z3wSIPBSaJxh5CsGO8eINI0aM0kyrQ46EcJSNeH85W8="
+const PublicKey = "2bBvV6Mo3BHQltzIUpD7BzvNeKvcQxWTotAXPhpCtVk="
 
 // Repo is where releases are published.
 const Repo = "timofejmihee1-cpu/memora"
