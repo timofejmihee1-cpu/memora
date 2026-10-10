@@ -3119,6 +3119,9 @@ export interface components {
             sub_title?: string;
             /** @description https://… или tg://… */
             support_url?: string;
+            bandwidth_stabilizer?: boolean;
+            /** Format: int64 */
+            server_bandwidth?: number;
         };
         PatchTelegramInputBody: {
             config?: components["schemas"]["Config"];
