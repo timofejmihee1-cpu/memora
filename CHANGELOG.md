@@ -3,6 +3,15 @@
 Each release has a section in English and in Russian; the release workflow puts them in
 the signed manifest, and the panel shows the one in its language.
 
+## 0.5.1
+### en
+- Added configurable bandwidth speed limits for tariffs (Mbps).
+- Improved performance and stability.
+
+### ru
+- Добавлено ограничение скорости для тарифов (Мбит/с).
+- Улучшена производительность и стабильность.
+
 ## 0.5.0.4
 ### en
 - With a domain, Hysteria2, TUIC, AnyTLS and TrustTunnel on the panel's own node failed their handshakes after the update to 0.5.0.3: the links no longer pinned a certificate, while the node could keep serving the self-signed one. The node now starts with the panel's public certificate and gets a new one as soon as it is issued, renewed or uploaded.
