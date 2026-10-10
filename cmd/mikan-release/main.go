@@ -251,18 +251,29 @@ func verify(args []string) error {
 	return nil
 }
 
-func privateKey(pemText string) (ed25519.PrivateKey, error) {
-	block, _ := pem.Decode([]byte(pemText))
-	if block == nil {
-		return nil, errors.New("RELEASE_SIGNING_KEY: no PEM key")
+func privateKey(keyText string) (ed25519.PrivateKey, error) {
+	keyText = strings.TrimSpace(keyText)
+	block, _ := pem.Decode([]byte(keyText))
+	if block != nil {
+		k, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("RELEASE_SIGNING_KEY: %w", err)
+		}
+		priv, ok := k.(ed25519.PrivateKey)
+		if !ok {
+			return nil, errors.New("RELEASE_SIGNING_KEY: not an Ed25519 key")
+		}
+		return priv, nil
 	}
-	k, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("RELEASE_SIGNING_KEY: %w", err)
+	// Also accept base64-encoded raw 32-byte seed or 64-byte private key.
+	raw, err := base64.StdEncoding.DecodeString(keyText)
+	if err == nil {
+		if len(raw) == ed25519.SeedSize {
+			return ed25519.NewKeyFromSeed(raw), nil
+		}
+		if len(raw) == ed25519.PrivateKeySize {
+			return ed25519.PrivateKey(raw), nil
+		}
 	}
-	priv, ok := k.(ed25519.PrivateKey)
-	if !ok {
-		return nil, errors.New("RELEASE_SIGNING_KEY: not an Ed25519 key")
-	}
-	return priv, nil
+	return nil, errors.New("RELEASE_SIGNING_KEY: no PEM key or valid base64 Ed25519 key")
 }
