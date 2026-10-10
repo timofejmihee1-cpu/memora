@@ -241,6 +241,11 @@ func (s *Syncer) desired(ctx context.Context) (nodeapi.DesiredState, error) {
 	}
 	st.Torrent = snap.torrent.Block()
 	st.Filters = snap.filters.State()
+	st.BandwidthStabilizer = snap.bandwidthStabilizer
+	if snap.serverBandwidth > 0 {
+		// Convert Mbps to bytes per second (1 Mbps = 125,000 bytes/s).
+		st.ServerBandwidth = snap.serverBandwidth * 125_000
+	}
 	st.Epoch, st.Policies, _ = s.policiesFrom(snap)
 	return st, nil
 }

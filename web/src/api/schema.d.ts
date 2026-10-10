@@ -3686,6 +3686,13 @@ export interface components {
             /** @description Название подписки в приложениях (заголовок profile-title); пусто — бренд. Переменные: {brand} — бренд, {name} — имя пользователя, {date} — дата окончания (ДД.ММ.ГГГГ, МСК), {days} — дней осталось, {used} — израсходовано, {left} — осталось трафика, {total} — всего; без срока или лимита — ∞ */
             sub_title: string;
             support_url: string;
+            /** @description Стабилизатор скорости между активными пользователями */
+            bandwidth_stabilizer?: boolean;
+            /**
+             * Format: int64
+             * @description Общая скорость сервера (Мбит/с)
+             */
+            server_bandwidth?: number;
         };
         SpeedTestView: {
             /** Format: date-time */

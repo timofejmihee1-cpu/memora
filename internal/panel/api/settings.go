@@ -60,6 +60,10 @@ type SettingsView struct {
 	HappProviderID   string `json:"happ_provider_id" doc:"Provider ID с happ-proxy.com; без него Happ не принимает hide-settings"`
 	HappHideSettings bool   `json:"happ_hide_settings" doc:"Скрыть в Happ настройки серверов подписки (нужен Provider ID)"`
 	HappCrypt        string `json:"happ_crypt" enum:"off,api,local" doc:"Шифрованная ссылка для кнопки Happ: off — обычная happ://add/, api — через сервис Happ (адрес подписки уходит на crypto.happ.su), local — панель шифрует сама"`
+
+	// Bandwidth stabilizer (fair-share rate limiting).
+	BandwidthStabilizer bool  `json:"bandwidth_stabilizer" doc:"Стабилизатор скорости между активными пользователями"`
+	ServerBandwidth     int64 `json:"server_bandwidth" doc:"Общая скорость сервера (Мбит/с)"`
 }
 
 type settingsOutput struct{ Body SettingsView }
@@ -92,8 +96,10 @@ type patchSettingsInput struct {
 		AutoSNI       *bool        `json:"auto_sni,omitempty"`
 		DeviceBinding *bool        `json:"device_binding,omitempty"`
 		RequireHWID   *bool        `json:"device_require_hwid,omitempty"`
-		DefaultLang   *string      `json:"default_lang,omitempty" enum:"auto,ru,en"`
-		SubPort       *int         `json:"sub_port,omitempty" minimum:"0" maximum:"65535" doc:"Отдельный порт подписок на сервере панели; 0 — убрать. Ссылки переезжают на него, старые продолжают работать"`
+		DefaultLang         *string      `json:"default_lang,omitempty" enum:"auto,ru,en"`
+		SubPort             *int         `json:"sub_port,omitempty" minimum:"0" maximum:"65535" doc:"Отдельный порт подписок на сервере панели; 0 — убрать. Ссылки переезжают на него, старые продолжают работать"`
+		BandwidthStabilizer *bool        `json:"bandwidth_stabilizer,omitempty"`
+		ServerBandwidth     *int64       `json:"server_bandwidth,omitempty" minimum:"0" maximum:"100000" doc:"Общая скорость сервера (Мбит/с)"`
 	}
 }
 
@@ -196,6 +202,14 @@ func (h *handlers) readSettings(ctx context.Context) (SettingsView, error) {
 	}
 	if v.HappHideSettings, err = h.d.Settings.On(ctx, settings.HappHide); err != nil {
 		return v, err
+	}
+	if v.BandwidthStabilizer, err = h.d.Settings.On(ctx, settings.BandwidthStabilizer); err != nil {
+		return v, err
+	}
+	if bw, ok, err := settings.Get[int64](ctx, h.d.Settings, settings.KeyServerBandwidth); err != nil {
+		return v, err
+	} else if ok {
+		v.ServerBandwidth = bw
 	}
 	v.HappCrypt = cmp.Or(v.HappCrypt, "off")
 	if v.Brand == "" {
@@ -465,11 +479,17 @@ func (h *handlers) updateSettings(ctx context.Context, in *patchSettingsInput) (
 			}
 		}
 		for key, v := range map[string]*bool{settings.KeyAutoPort: b.AutoPort, settings.KeyAutoSNI: b.AutoSNI,
-			settings.KeyDeviceBinding: b.DeviceBinding, settings.KeyRequireHWID: b.RequireHWID, settings.KeyAppBranding: b.AppBranding, settings.KeyHappHide: b.HappHide} {
+			settings.KeyDeviceBinding: b.DeviceBinding, settings.KeyRequireHWID: b.RequireHWID, settings.KeyAppBranding: b.AppBranding, settings.KeyHappHide: b.HappHide,
+			settings.KeyBandwidthStabilizer: b.BandwidthStabilizer} {
 			if v != nil {
 				if err := settings.Set(ctx, set, key, *v); err != nil {
 					return err
 				}
+			}
+		}
+		if b.ServerBandwidth != nil {
+			if err := settings.Set(ctx, set, settings.KeyServerBandwidth, *b.ServerBandwidth); err != nil {
+				return err
 			}
 		}
 		return nil

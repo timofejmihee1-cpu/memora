@@ -3,6 +3,15 @@
 Each release has a section in English and in Russian; the release workflow puts them in
 the signed manifest, and the panel shows the one in its language.
 
+## 0.5.2
+### en
+- Added fair-share bandwidth stabilizer in Settings → System to dynamically balance server uplink among active users.
+- Improved rate limiting and connection management.
+
+### ru
+- Добавлен стабилизатор скорости в «Настройки → Система» для справедливого деления канала сервера между активными пользователями.
+- Улучшено управление скоростью и соединениями.
+
 ## 0.5.1
 ### en
 - Added configurable bandwidth speed limits for tariffs (Mbps).

@@ -90,6 +90,9 @@ const (
 	// KeySubPage is the subscription page as the admin built it (subpage.Config): its look,
 	// blocks, apps and own CSS; unset: the page as it always was.
 	KeySubPage = "sub_page"
+	// Bandwidth stabilizer (fair-share rate limiting between active clients).
+	KeyBandwidthStabilizer = "bandwidth_stabilizer"
+	KeyServerBandwidth    = "server_bandwidth" // Mbps
 )
 
 // Switch is an on/off setting with its default: read it with On, so the default lives
@@ -108,8 +111,9 @@ var (
 	AutoUpdate    = Switch{KeyAutoUpdate, false}
 	NodesFollow   = Switch{KeyNodesFollow, true}
 	ShowGoals     = Switch{KeyShowGoals, true}
-	AppBranding   = Switch{KeyAppBranding, false}
-	HappHide      = Switch{KeyHappHide, false}
+	AppBranding         = Switch{KeyAppBranding, false}
+	HappHide            = Switch{KeyHappHide, false}
+	BandwidthStabilizer = Switch{KeyBandwidthStabilizer, false}
 )
 
 // ValidLang says whether s is a language of the panel.

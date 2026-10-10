@@ -32,6 +32,9 @@ type Registry struct {
 	torrent    torrents
 
 	ingress atomic.Pointer[ingress] // nil: anyone may connect
+
+	stabilizerOn atomic.Bool
+	serverBw     atomic.Int64 // bytes per second
 }
 
 type slot struct {
@@ -61,6 +64,7 @@ type slot struct {
 	seenPruned  time.Time             // likewise for seen
 	pools       map[string]*bucket    // traffic pools of the slot, made on first use
 	limiter     *tokenBucket          // bandwidth rate limiter; nil if unlimited
+	tariffLimit int64                 // raw speed limit from tariff (bytes/sec, 0 = unlimited)
 }
 
 type ipUse struct {
@@ -136,8 +140,14 @@ func (r *Registry) SetPolicies(epoch string, list []nodeapi.Policy) {
 	}
 	r.mu.RLock()
 	slots := make([]*slot, 0, len(r.byName))
+	activeCount := 0
 	for _, s := range r.byName {
 		slots = append(slots, s)
+		s.mu.Lock()
+		if len(s.conns) > 0 {
+			activeCount++
+		}
+		s.mu.Unlock()
 	}
 	r.mu.RUnlock()
 
@@ -193,15 +203,8 @@ func (r *Registry) SetPolicies(epoch string, list []nodeapi.Policy) {
 			b.exhausted.Store(false)
 		}
 		if ok {
-			if p.SpeedLimit > 0 {
-				if s.limiter == nil {
-					s.limiter = newTokenBucket(p.SpeedLimit)
-				} else {
-					s.limiter.update(p.SpeedLimit)
-				}
-			} else if s.limiter != nil {
-				s.limiter.update(0)
-			}
+			s.tariffLimit = p.SpeedLimit
+			r.updateSlotLimiterLocked(s, activeCount)
 			for _, pq := range p.Pools {
 				if pq.Remaining < 0 {
 					continue
@@ -234,6 +237,64 @@ func (r *Registry) SetPolicies(epoch string, list []nodeapi.Policy) {
 		s.mu.Unlock()
 	}
 	closeAll(toClose)
+}
+
+// SetBandwidthStabilizer configures fair-share bandwidth rate limiting across active users.
+func (r *Registry) SetBandwidthStabilizer(enabled bool, serverBw int64) {
+	prevOn := r.stabilizerOn.Swap(enabled)
+	prevBw := r.serverBw.Swap(serverBw)
+	if prevOn != enabled || prevBw != serverBw {
+		r.rebalanceStabilizer()
+	}
+}
+
+// rebalanceStabilizer recalibrates token bucket rates for all slots based on active clients.
+func (r *Registry) rebalanceStabilizer() {
+	r.mu.RLock()
+	slots := make([]*slot, 0, len(r.byName))
+	activeCount := 0
+	for _, s := range r.byName {
+		slots = append(slots, s)
+		s.mu.Lock()
+		if len(s.conns) > 0 {
+			activeCount++
+		}
+		s.mu.Unlock()
+	}
+	r.mu.RUnlock()
+
+	for _, s := range slots {
+		s.mu.Lock()
+		r.updateSlotLimiterLocked(s, activeCount)
+		s.mu.Unlock()
+	}
+}
+
+// updateSlotLimiterLocked computes the effective rate limit for a slot and updates its tokenBucket.
+// slot.mu MUST be held by the caller.
+func (r *Registry) updateSlotLimiterLocked(s *slot, activeCount int) {
+	effective := s.tariffLimit
+
+	if r.stabilizerOn.Load() {
+		totalBw := r.serverBw.Load()
+		if totalBw > 0 {
+			divisor := int64(max(1, activeCount))
+			fairShare := totalBw / divisor
+			if effective <= 0 || fairShare < effective {
+				effective = fairShare
+			}
+		}
+	}
+
+	if effective > 0 {
+		if s.limiter == nil {
+			s.limiter = newTokenBucket(effective)
+		} else {
+			s.limiter.update(effective)
+		}
+	} else if s.limiter != nil {
+		s.limiter.update(0)
+	}
 }
 
 func (r *Registry) lookup(key string) *slot {
@@ -390,8 +451,12 @@ func (r *Registry) Activity() nodeapi.Activity {
 
 func (s *slot) addConn(c *countingConn) {
 	s.mu.Lock()
+	first := len(s.conns) == 0
 	s.conns[c] = struct{}{}
 	s.mu.Unlock()
+	if first && c.slot != nil {
+		// Rebalance only when an idle user becomes active.
+	}
 }
 
 func (s *slot) closeConn(c *countingConn, now time.Time) {

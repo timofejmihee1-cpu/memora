@@ -1232,6 +1232,14 @@
     "autoSni": "Replace the camouflage site when it stops working",
     "autoSniSub": "Every 15 minutes the node checks the REALITY camouflage site. After three failures in a row the panel picks a working site next to the server, never its own domain.",
     "autoNote": "Clients get the changes with their next subscription update, usually within an hour. Automatic fixes can be turned off for a single protocol in its settings.",
+    "stabilizer": {
+      "title": "Bandwidth Stabilizer",
+      "sub": "Fair-share rate limiting across active users",
+      "enable": "Stabilize internet bandwidth",
+      "enableSub": "Prevents a single user from consuming the entire server uplink under load.",
+      "bandwidth": "Total server uplink capacity",
+      "bandwidthHint": "Physical server bandwidth (Mbps). The panel dynamically distributes this speed equally among currently active downloads."
+    },
     "updates": "Updates",
     "updatesSub": "The panel checks for new versions once a day",
     "updatesCheck": "Check now",

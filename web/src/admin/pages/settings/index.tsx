@@ -7,7 +7,7 @@ import { ThemeCard } from "../../../components/theme";
 import { PageHeader, Skeleton } from "../../../components/ui";
 import { t, type Key } from "../../../i18n";
 import { SETTINGS_PARTS, SETTINGS_TABS, type SettingsSearch } from "../../search";
-import { AutoCard, LanguageCard, ServiceCard, UpdatesCard } from "./general";
+import { AutoCard, BandwidthStabilizerCard, LanguageCard, ServiceCard, UpdatesCard } from "./general";
 import { GoalsCard } from "./goals";
 import { ImportCard, LegacyLinksCard } from "./import";
 import { RoutingSection } from "./routing";
@@ -96,6 +96,7 @@ export function SettingsPage() {
                 <>
                   <UpdatesCard />
                   <GoalsCard />
+                  <BandwidthStabilizerCard s={s} />
                   <AutoCard s={s} />
                 </>
               ) : (

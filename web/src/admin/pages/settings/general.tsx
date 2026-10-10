@@ -132,6 +132,65 @@ export function AutoCard({ s }: { s: Schemas["SettingsView"] }) {
   );
 }
 
+/** Fair-share bandwidth stabilizer to prevent single clients from saturating the server uplink. */
+export function BandwidthStabilizerCard({ s }: { s: Schemas["SettingsView"] }) {
+  const save = useSaveSettings();
+  const { draft, setDraft, dirty, reset } = useDraft({
+    bandwidth_stabilizer: s.bandwidth_stabilizer ?? false,
+    server_bandwidth: s.server_bandwidth ? String(s.server_bandwidth) : "1000",
+  });
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const bw = parseInt(draft.server_bandwidth, 10);
+    save.mutate({
+      bandwidth_stabilizer: draft.bandwidth_stabilizer,
+      server_bandwidth: isNaN(bw) || bw <= 0 ? 1000 : bw,
+    });
+  };
+  return (
+    <section className="card glass reveal" style={{ "--i": 4 } as React.CSSProperties}>
+      <form onSubmit={submit} noValidate>
+        <div className="card-head">
+          <div>
+            <h2 className="card-title">{t("settings.stabilizer.title")}</h2>
+            <div className="card-sub">{t("settings.stabilizer.sub")}</div>
+          </div>
+        </div>
+        <ul className="row-list">
+          <li>
+            <SwitchRow
+              label={t("settings.stabilizer.enable")}
+              sub={t("settings.stabilizer.enableSub")}
+              checked={draft.bandwidth_stabilizer}
+              disabled={save.isPending}
+              onChange={(on) => setDraft((d) => ({ ...d, bandwidth_stabilizer: on }))}
+            />
+          </li>
+        </ul>
+        {draft.bandwidth_stabilizer ? (
+          <div className="mt-4 pt-4 border-t border-[var(--hairline)]">
+            <Field label={t("settings.stabilizer.bandwidth")} htmlFor="s-bandwidth" hint={t("settings.stabilizer.bandwidthHint")}>
+              <div className="flex items-center gap-2 max-w-[280px]">
+                <input
+                  id="s-bandwidth"
+                  type="number"
+                  min={1}
+                  max={100000}
+                  className="input mono"
+                  value={draft.server_bandwidth}
+                  onChange={(e) => setDraft((d) => ({ ...d, server_bandwidth: e.target.value }))}
+                />
+                <span className="text-sm font-semibold text-[var(--ink-500)]">{t("tariffs.mbps")}</span>
+              </div>
+            </Field>
+          </div>
+        ) : null}
+        <FormActions dirty={dirty} saving={save.isPending} onReset={reset} />
+      </form>
+    </section>
+  );
+}
+
 /** The release the panel runs, the newest one and the host updater's last run. */
 export function UpdatesCard() {
   const u = useUpdates();

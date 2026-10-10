@@ -43,6 +43,9 @@ type DesiredState struct {
 	// Filters keep users' traffic from places and strangers from the node; nil: none.
 	// Nodes older than the filters ignore it.
 	Filters *Filters `json:"filters,omitempty"`
+	// BandwidthStabilizer and ServerBandwidth (in bytes/sec, 0 = unlimited).
+	BandwidthStabilizer bool  `json:"bandwidth_stabilizer,omitempty"`
+	ServerBandwidth     int64 `json:"server_bandwidth,omitempty"`
 }
 
 // Filters are the ingress and egress filters of the node.
